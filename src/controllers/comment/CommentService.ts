@@ -14,7 +14,7 @@ export const saveComment = async (email: string, name: string, body: string, pos
 
     await comment.save();
 
-
+    console.log(comment);
     return comment
 }
 export const getAllComments = async (currentPage: number, pageSize: number, postId: string) => {
@@ -25,7 +25,7 @@ export const getAllComments = async (currentPage: number, pageSize: number, post
     };
     const { docs, totalDocs, totalPages } = await Comment.paginate(
         { post: postId }, options as PaginateOptions);
-    return { todos: docs, page: currentPage, pages: totalPages, totalComments: totalDocs }
+    return { comments: docs, page: currentPage, pages: totalPages, totalComments: totalDocs }
 }
 
 

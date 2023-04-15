@@ -1,7 +1,8 @@
-import { Router, Response } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
 import { body, param, validationResult } from 'express-validator';
 import { deleteComment, getAllComments, getCommentById, saveComment, updateComment } from './CommentService';
+import logger from '../../logger';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.post('/comment/:postId', authMiddleware, [
     body('name').notEmpty().isString(),
     body('body').notEmpty().isString(),
     param('postId').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response) => {
+], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { email, name, body } = req.body;
     const { postId } = req.params;
 
@@ -25,23 +26,23 @@ router.post('/comment/:postId', authMiddleware, [
     }
 
     try {
-        const comment = saveComment(email, name, body, postId, req.user._id)
+        const comment = await saveComment(email, name, body, postId, req.user?.id)
 
         res.status(201).json({ message: 'Comment created successfully', comment });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        logger.error(error);
+        next(error);
     }
 });
 
 /**
  * @method - GET
- * @param - /comment/:postId
+ * @param - /comment/post/:postId
  * @description - Get all comments for a post
  */
-router.get('/comment/:postId', authMiddleware, [
+router.get('/comment/post/:postId', authMiddleware, [
     param('postId').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response) => {
+], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { postId } = req.params;
     const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
@@ -57,8 +58,8 @@ router.get('/comment/:postId', authMiddleware, [
 
         res.status(200).json(comments);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        logger.error(error);
+        next(error);
     }
 });
 /**
@@ -68,7 +69,7 @@ router.get('/comment/:postId', authMiddleware, [
  */
 router.get('/comment/:commentId', authMiddleware, [
     param('commentId').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response) => {
+], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { commentId } = req.params;
 
     const errors = validationResult(req);
@@ -85,8 +86,8 @@ router.get('/comment/:commentId', authMiddleware, [
 
         res.status(200).json(comment);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        logger.error(error);
+        next(error);
     }
 });
 
@@ -101,7 +102,7 @@ router.put('/comment/:id', authMiddleware, [
     body('email').optional().isEmail(),
     body('name').optional().isString(),
     body('body').optional().isString()
-], async (req: AuthenticatedRequest, res: Response) => {
+], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     const errors = validationResult(req);
@@ -111,12 +112,12 @@ router.put('/comment/:id', authMiddleware, [
 
     try {
         const { email, name, body } = req.body;
-        const comment = await updateComment(id, req.user._id, email, name, body);
+        const comment = await updateComment(id, req.user?.id, email, name, body);
 
         res.status(200).json({ message: 'Comment updated successfully', comment });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        logger.error(error);
+        next(error);
     }
 });
 /**
@@ -124,15 +125,15 @@ router.put('/comment/:id', authMiddleware, [
  * @param - /comment/:id
  * @description - Delete a comment
  */
-router.delete('/comment/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/comment/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     try {
-        const message = await deleteComment(req.params.id, req.user._id)
+        const message = await deleteComment(id, req.user?.id)
         res.status(200).json({ message: message });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        logger.error(error);
+        next(error);
     }
 });
 

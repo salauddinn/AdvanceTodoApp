@@ -26,6 +26,11 @@ const commentSchema = new mongoose.Schema(
             ref: 'Post',
             required: true,
         },
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
     },
     { timestamps: true }
 );
@@ -38,6 +43,7 @@ interface CommentDocument extends mongoose.Document {
     email: string,
     body: string,
     name: string,
+    user: mongoose.Schema.Types.ObjectId,
     post: mongoose.Schema.Types.ObjectId,
     createdAt: Date;
     updatedAt: Date;

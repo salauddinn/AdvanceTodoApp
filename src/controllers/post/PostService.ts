@@ -23,8 +23,7 @@ export const getAllPosts = async (currentPage: number, pageSize: number, userid:
         sort: { createdAt: -1 },
     };
     const { docs, totalDocs, totalPages } = await Post.paginate({ user: userid }, options as PaginateOptions);
-
-    return { todos: docs, page: currentPage, pages: totalPages, totalPosts: totalDocs }
+    return { posts: docs, page: currentPage, pages: totalPages, totalPosts: totalDocs }
 }
 
 

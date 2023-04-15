@@ -1,7 +1,8 @@
-import { Router, Response } from "express";
+import { Router, Response, NextFunction } from "express";
 import { check, validationResult } from "express-validator";
 import authMiddleware, { AuthenticatedRequest } from "../../middlewares/auth";
 import { deletePost, getAllPosts, getPost, savePost, updatePost } from "./PostService";
+import logger from "../../logger";
 
 const router = Router();
 
@@ -17,8 +18,7 @@ router.post(
         check("body", "Please enter post body").notEmpty()
     ],
     authMiddleware,
-    async (req: AuthenticatedRequest, res: Response) => {
-        console.log("hello")
+    async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
@@ -31,11 +31,11 @@ router.post(
         const userId = req.user.id;
 
         try {
-            const post = await savePost(title, body,userId)
+            const post = await savePost(title, body, userId)
             res.status(201).json(post);
         } catch (err) {
-            console.log(err.message);
-            res.status(500).send("Error in Saving");
+            logger.error(err);
+            next(err);
         }
     }
 );
@@ -44,18 +44,16 @@ router.post(
  * @param - /post
  * @description - Get all posts with pagination
  */
-router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
 
     try {
-        const posts = await getAllPosts(pageSize, currentPage, req.user?.id);
+        const posts = await getAllPosts(currentPage, pageSize, req.user?.id);
         res.status(200).json(posts);
     } catch (e) {
-        console.error(e);
-        res.status(500).json({
-            message: "Server Error"
-        });
+        logger.error(e);
+        next(e);
     }
 });
 
@@ -64,15 +62,13 @@ router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Respo
  * @param - /post/:id
  * @description - Get a specific post
  */
-router.get("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.get("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const post = await getPost(req.params.id, req.user.id)
         res.status(200).json(post);
     } catch (e) {
-        console.error(e);
-        res.status(500).json({
-            message: "Server Error"
-        });
+        logger.error(e);
+        next(e);
     }
 });
 
@@ -81,7 +77,7 @@ router.get("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
  * @param - /post/:id
  * @description - Update a post
  */
-router.put("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.put("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { title, body } = req.body;
 
     try {
@@ -89,10 +85,8 @@ router.put("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
 
         res.status(200).json(post);
     } catch (e) {
-        console.error(e);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
+        logger.error(e);
+        next(e);
     }
 });
 
@@ -101,7 +95,7 @@ router.put("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
  * @param - /post/:id
  * @description - Delete a post
  */
-router.delete("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.delete("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const message = await deletePost(req.params.id, req.user.id)
 
@@ -109,10 +103,8 @@ router.delete("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res
             message: message
         });
     } catch (e) {
-        console.error(e);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
+        logger.error(e);
+        next(e);
     }
 });
 

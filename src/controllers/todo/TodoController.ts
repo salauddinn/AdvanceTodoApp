@@ -1,4 +1,4 @@
-import { Router, Response } from "express";
+import { Response, Router } from "express";
 import { check, validationResult } from "express-validator";
 import authMiddleware, { AuthenticatedRequest } from "../../middlewares/auth";
 import { deleteTodo, getAlltodos, getTodo, saveTodo, updateTodo } from "./TodoService";
@@ -25,8 +25,8 @@ router.post(
         }
 
         const { content, completed = false } = req.body;
-        const userId = req.user?._id;
-        console.log(userId,"----")
+        const userId = req.user?.id;
+    
         try {
             const todo = await saveTodo(userId, content, completed)
             res.status(201).json(todo);
@@ -46,7 +46,7 @@ router.get("/todo", authMiddleware, async (req: AuthenticatedRequest, res: Respo
     const currentPage = Number(req.query.pageNumber) || 1;
 
     try {
-        const userId = req.user?._id;
+        const userId = req.user?.id;
         const todos = await getAlltodos(currentPage, pageSize, userId)
         res.status(200).json(todos);
     } catch (e) {
@@ -112,7 +112,7 @@ router.delete("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res
     }
 });
 
-export { router as TodoRouter }
+export { router as TodoRouter };
 
 
 
