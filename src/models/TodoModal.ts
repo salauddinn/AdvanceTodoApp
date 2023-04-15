@@ -8,10 +8,7 @@ const todoSchema = new mongoose.Schema(
             required: true,
             allowEmpty: false
         },
-        date: {
-            type: Date,
-            default: Date.now
-        },
+      
         completed: {
             type: Boolean,
 
@@ -31,9 +28,10 @@ todoSchema.plugin(paginate);
 
 interface TodoDocument extends mongoose.Document {
     content: string,
-    date: Date
     completed: boolean,
     user: mongoose.Schema.Types.ObjectId,
+    createdAt: Date;
+    updatedAt: Date;
 }
 const Todo = mongoose.model<TodoDocument, mongoose.PaginateModel<TodoDocument>>('Todo', todoSchema);
 

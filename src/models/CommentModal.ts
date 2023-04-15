@@ -1,34 +1,48 @@
-// import mongoose from 'mongoose';
-// import paginate from 'mongoose-paginate-v2';
+import mongoose from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
-// const todoSchema = new mongoose.Schema(
-//     {
-//         content: {
-//             type: String,
-//             required: true,
-//             allowEmpty: false
-//         },
-//         date: {
-//             type: Date,
-//             default: Date.now
-//         },
-//         completed:{
-//             type: Boolean,
+const commentSchema = new mongoose.Schema(
+    {
+        email: {
+            type: String,
+            required: true,
+            allowEmpty: false,
+            unique: true,
+            trim: true,
+        },
+        name: {
+            type: String,
+            required: true,
+            allowEmpty: false
+        },
+        body: {
+            type: String,
+            required: true,
+            allowEmpty: false
+        },
 
-//         }
-//     },
-//     { timestamps: true }
-// );
+        post: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Post',
+            required: true,
+        },
+    },
+    { timestamps: true }
+);
 
-// todoSchema.plugin(paginate);
+commentSchema.plugin(paginate);
 
 
 
-// interface TodoDocument extends mongoose.Document {
-//     content: string,
-//     date: Date
-// }
-// const Todo = mongoose.model<TodoDocument, mongoose.PaginateModel<TodoDocument>>('Todo', todoSchema);
+interface CommentDocument extends mongoose.Document {
+    email: string,
+    body: string,
+    name: string,
+    post: mongoose.Schema.Types.ObjectId,
+    createdAt: Date;
+    updatedAt: Date;
+}
+const Comment = mongoose.model<CommentDocument, mongoose.PaginateModel<CommentDocument>>('Comment', commentSchema);
 
-// export { Todo, TodoDocument };
+export { Comment, CommentDocument };
 

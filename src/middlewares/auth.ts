@@ -5,9 +5,9 @@ const jwt = require("jsonwebtoken");
 export interface AuthenticatedRequest extends Request {
     user?: UserDocument;
 }
-module.exports = function (req: AuthenticatedRequest, res: Response, next: NextFunction) {
+const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.header("token");
-    if (!token) return res.status(401).json({ message: "Auth Error" });
+    if (!token) return res.status(401).json({ message: "Auth Error please login and try again" });
 
     try {
         const decoded = jwt.verify(token, "randomString");
@@ -18,3 +18,4 @@ module.exports = function (req: AuthenticatedRequest, res: Response, next: NextF
         res.status(500).send({ message: "Invalid Token" });
     }
 };
+export default authMiddleware;  

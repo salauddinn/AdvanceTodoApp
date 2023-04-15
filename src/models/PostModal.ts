@@ -1,34 +1,40 @@
-// import mongoose from 'mongoose';
-// import paginate from 'mongoose-paginate-v2';
+import mongoose from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
-// const todoSchema = new mongoose.Schema(
-//     {
-//         content: {
-//             type: String,
-//             required: true,
-//             allowEmpty: false
-//         },
-//         date: {
-//             type: Date,
-//             default: Date.now
-//         },
-//         completed:{
-//             type: Boolean,
+const postSchema = new mongoose.Schema(
+    {
+        body: {
+            type: String,
+            required: true,
+            allowEmpty: false
+        },
+        title: {
+            type: String,
+            required: true,
+            allowEmpty: false
+        },
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
 
-//         }
-//     },
-//     { timestamps: true }
-// );
+    },
+    { timestamps: true }
+);
 
-// todoSchema.plugin(paginate);
-
+postSchema.plugin(paginate);
 
 
-// interface TodoDocument extends mongoose.Document {
-//     content: string,
-//     date: Date
-// }
-// const Todo = mongoose.model<TodoDocument, mongoose.PaginateModel<TodoDocument>>('Todo', todoSchema);
 
-// export { Todo, TodoDocument };
+interface PostDocument extends mongoose.Document {
+    body: string,
+    title: string,
+    user: mongoose.Schema.Types.ObjectId,
+    createdAt: Date;
+    updatedAt: Date;
+}
+const Post = mongoose.model<PostDocument, mongoose.PaginateModel<PostDocument>>('Post', postSchema);
+
+export { Post, PostDocument };
 
