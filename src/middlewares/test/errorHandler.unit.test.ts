@@ -2,7 +2,6 @@ import sinon from 'sinon';
 import { Request, Response } from 'express';
 import { errorHandler, ErrorWithStatus } from '../errorHandler';
 import { CustomError } from '../../errors';
-import { ValidationError } from 'joi';
 
 class TestCustomError extends CustomError {
   statusCode = 404;
@@ -21,8 +20,6 @@ describe('Error Handler Middleware', () => {
   const badRequestErr: ErrorWithStatus = new Error('unknown');
   badRequestErr.statusCode = 400;
 
-  const errors = [{ message: 'f1 empty', path: ['f1'], type: 'empty' }];
-  const validationErr = new ValidationError('test error', errors, {});
 
   const tests = [
     {
@@ -37,12 +34,7 @@ describe('Error Handler Middleware', () => {
       status: 400,
       messages: [{ message: 'Invalid request body' }],
     },
-    {
-      scenario: 'should return validation errors if validation error',
-      error: validationErr,
-      status: 400,
-      messages: [{ message: 'f1 empty' }],
-    },
+    
     {
       scenario: 'should return custom status if error is with custom status',
       error: new TestCustomError(),

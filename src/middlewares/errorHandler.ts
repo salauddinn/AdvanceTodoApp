@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { CustomError } from '../errors';
-import { ValidationError } from 'joi';
 import logger from '../logger';
 
 export type ErrorWithStatus = Error & { status?: number; statusCode?: number };
@@ -13,13 +12,7 @@ const errorHandler = (err: ErrorWithStatus, _req: Request, res: Response, _: Nex
     return res.status(status).send({ errors: err.serializeErrors() });
   }
 
-  if (err instanceof ValidationError) {
-    return res.status(status).send({
-      errors: err.details.map((err) => {
-        return { message: err.message };
-      }),
-    });
-  }
+  
 
   if (status === 400) {
     return res.status(status).send({ errors: [{ message: 'Invalid request body' }] });
@@ -30,9 +23,7 @@ const errorHandler = (err: ErrorWithStatus, _req: Request, res: Response, _: Nex
   });
 };
 const getStatusCode = (err: ErrorWithStatus) => {
-  if (err instanceof ValidationError) {
-    return 400;
-  }
+
   return err.status ?? err.statusCode ?? 500;
 };
 
