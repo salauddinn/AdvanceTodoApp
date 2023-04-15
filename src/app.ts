@@ -1,10 +1,16 @@
-import express from 'express';
-import config  from './config/serverConfig';
+import express, { json } from 'express';
+import { RouteNotFoundError } from './errors';
+import { errorHandler } from './middlewares';
+import cors from 'cors';
+const app = express();
+app.set('trust proxy', true);
+app.use(json());
+app.use(cors());
 
-const setUpAndStartServer = async () => {
-    const app = express();
-    app.listen(config.PORT, () => {
-        console.log(`Server🚀 Started at ${config.PORT}`);
-    });
-}
-setUpAndStartServer();
+app.all('*', () => {
+    throw new RouteNotFoundError();
+});
+
+app.use(errorHandler);
+
+export { app };
