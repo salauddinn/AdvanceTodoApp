@@ -15,7 +15,7 @@ const connectMongoDB = async () => {
     logger.info('✅ mongoose is connected');
   });
 };
-const { MONGO_HOST, MONGO_PORT, MONGO_USERNAME, MONGO_PASSWORD,MONGO_DB_NAME } = config
+const { MONGO_HOST, MONGO_PORT, MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB_NAME } = config
 
 const getConnectionString = () => {
   if (!MONGO_HOST) {
@@ -34,7 +34,6 @@ const getConnectionString = () => {
   const password = encodeURIComponent(MONGO_PASSWORD);
 
   const connectionString = `mongodb://${username}:${password}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_NAME}`;
-  console.log(connectionString,"---");
   return connectionString;
 };
 

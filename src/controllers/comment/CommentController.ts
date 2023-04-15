@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
-import { body, param, validationResult } from 'express-validator';
+import { body, query, param, validationResult } from 'express-validator';
 import { deleteComment, getAllComments, getCommentById, saveComment, updateComment } from './CommentService';
 import logger from '../../logger';
 
@@ -37,13 +37,13 @@ router.post('/comment/:postId', authMiddleware, [
 
 /**
  * @method - GET
- * @param - /comment/post/:postId
+ * @param - /comment?postId={}&pageSize={}&pageNumber={}
  * @description - Get all comments for a post
  */
-router.get('/comment/post/:postId', authMiddleware, [
-    param('postId').notEmpty().isMongoId()
+router.get('/comment', authMiddleware, [
+    query('postId').notEmpty().isMongoId()
 ], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { postId } = req.params;
+    const postId  = req.query?.postId?.toString();
     const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
 

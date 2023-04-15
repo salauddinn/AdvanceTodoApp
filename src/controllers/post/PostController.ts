@@ -41,7 +41,7 @@ router.post(
 );
 /**
  * @method - GET
- * @param - /post
+ * @param - /post?pageSize={}&pageNumber={}
  * @description - Get all posts with pagination
  */
 router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -49,7 +49,7 @@ router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Respo
     const currentPage = Number(req.query.pageNumber) || 1;
 
     try {
-        const posts = await getAllPosts(currentPage, pageSize, req.user?.id);
+        const posts = await getAllPosts(currentPage, pageSize);
         res.status(200).json(posts);
     } catch (e) {
         logger.error(e);
@@ -64,7 +64,7 @@ router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Respo
  */
 router.get("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        const post = await getPost(req.params.id, req.user.id)
+        const post = await getPost(req.params.id)
         res.status(200).json(post);
     } catch (e) {
         logger.error(e);

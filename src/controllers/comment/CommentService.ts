@@ -14,7 +14,6 @@ export const saveComment = async (email: string, name: string, body: string, pos
 
     await comment.save();
 
-    console.log(comment);
     return comment
 }
 export const getAllComments = async (currentPage: number, pageSize: number, postId: string) => {
