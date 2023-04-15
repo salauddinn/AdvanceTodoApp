@@ -1,8 +1,7 @@
-import { Router, Request, Response } from "express";
+import { Router, Response } from "express";
 import { check, validationResult } from "express-validator";
-import { Todo, TodoDocument } from "../../models/TodoModal";
 import authMiddleware, { AuthenticatedRequest } from "../../middlewares/auth";
-import { PaginateOptions } from "mongoose";
+import { deleteTodo, getAlltodos, getTodo, saveTodo, updateTodo } from "./TodoService";
 
 const router = Router();
 
@@ -16,6 +15,7 @@ router.post(
     [check("content", "Please enter todo content").notEmpty()],
     authMiddleware,
     async (req: AuthenticatedRequest, res: Response) => {
+        console.log("sdds")
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
@@ -26,16 +26,9 @@ router.post(
 
         const { content, completed = false } = req.body;
         const userId = req.user?._id;
-
+        console.log(userId,"----")
         try {
-            const todo = new Todo({
-                content,
-                user: userId,
-                completed,
-            });
-
-            await todo.save();
-
+            const todo = await saveTodo(userId, content, completed)
             res.status(201).json(todo);
         } catch (err) {
             console.log(err.message);
@@ -49,18 +42,13 @@ router.post(
  * @description - Get all todos with pagination
  */
 router.get("/todo", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-    const pageSize = req.query.pageSize || 10;
+    const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
 
     try {
-        const options = {
-            page: currentPage,
-            limit: pageSize,
-            sort: { createdAt: -1 },
-        };
-        const { docs, totalDocs, totalPages } = await Todo.paginate({ user: { $ne: req.user.id } }, options as PaginateOptions);
-
-        res.status(200).json({ todos: docs, page: currentPage, pages: totalPages, totalTodos: totalDocs });
+        const userId = req.user?._id;
+        const todos = await getAlltodos(currentPage, pageSize, userId)
+        res.status(200).json(todos);
     } catch (e) {
         console.error(e);
         res.status(500).json({
@@ -76,12 +64,7 @@ router.get("/todo", authMiddleware, async (req: AuthenticatedRequest, res: Respo
  */
 router.get("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const todo = await Todo.findOne({ _id: req.params.id, user: { $ne: req.user.id } });
-        if (!todo) {
-            return res.status(404).json({
-                message: "Todo not found"
-            });
-        }
+        const todo = await getTodo(req.params.id, req.user._id)
         res.status(200).json(todo);
     } catch (e) {
         console.error(e);
@@ -100,22 +83,7 @@ router.put("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
     const { content, completed } = req.body;
 
     try {
-        let todo = await Todo.findOne({ _id: req.params.id, user: req.user.id });
-        if (!todo) {
-            return res.status(404).json({
-                message: "Not able to find todo"
-            });
-        }
-
-        if (content) {
-            todo.content = content;
-        }
-        if (completed !== undefined) {
-            todo.completed = completed;
-        }
-
-        await todo.save();
-
+        const todo = updateTodo(req.params.id, req.user._id , content, completed)
         res.status(200).json(todo);
     } catch (e) {
         console.error(e);
@@ -132,17 +100,9 @@ router.put("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
  */
 router.delete("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const todo = await Todo.findOne({ _id: req.params.id, user: req.user.id });
-        if (!todo) {
-            return res.status(404).json({
-                message: "Not able to find todo"
-            });
-        }
-
-        await todo.remove();
-
+        const meesage = await deleteTodo(req.params.id, req.user._id )
         res.status(200).json({
-            message: "Todo deleted successfully"
+            message: meesage
         });
     } catch (e) {
         console.error(e);
@@ -153,3 +113,6 @@ router.delete("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res
 });
 
 export { router as TodoRouter }
+
+
+

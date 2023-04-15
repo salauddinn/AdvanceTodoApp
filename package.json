@@ -2,11 +2,12 @@
   "name": "todosapp",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "start": "tsc && node dist/src/index.js",
     "test": "mocha --config .mocharc.unit.json",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +24,8 @@
     "mocha": "^10.2.0",
     "sinon": "^15.0.3",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "nodemon": "^2.0.22"
   },
   "dependencies": {
     "bcrypt": "^5.1.0",

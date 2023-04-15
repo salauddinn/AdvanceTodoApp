@@ -1,9 +1,9 @@
-import bcrypt from 'bcrypt';
-import { Response, Router } from 'express';
+import { NextFunction, Response, Router } from 'express';
 import { check, param, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
-import { User } from '../../models/UserModal';
+import { getUser, loginUser, saveUser } from './UserService';
+import logger from '../../logger';
 
 const router = Router();
 
@@ -22,7 +22,7 @@ router.post(
             min: 6,
         }),
     ],
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -32,30 +32,7 @@ router.post(
 
         const { email, password } = req.body;
         try {
-            let user = await User.findOne({
-                email,
-            });
-            if (user) {
-                return res.status(400).json({
-                    msg: 'User Already Exists',
-                });
-            }
-
-            user = new User({
-                email,
-                password,
-            });
-
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(password, salt);
-
-            await user.save();
-
-            const payload = {
-                user: {
-                    id: user.id,
-                },
-            };
+            const payload = await saveUser(email, password)
             jwt.sign(
                 payload,
                 'randomString',
@@ -70,8 +47,8 @@ router.post(
                 }
             );
         } catch (err) {
-            console.log(err.message);
-            res.status(500).send('Error in Saving');
+            logger.error(err);
+            next(err);
         }
     }
 );
@@ -82,7 +59,7 @@ router.post(
  */
 router.get('/user/:id', authMiddleware, [
     param('id').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response) => {
+], async (req: AuthenticatedRequest, res: Response,next:NextFunction) => {
     const { id } = req.params;
 
     const errors = validationResult(req);
@@ -91,16 +68,12 @@ router.get('/user/:id', authMiddleware, [
     }
 
     try {
-        const user = await User.findById(id).select('-password');
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        const user = await getUser(id)
 
         res.status(200).json(user);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        logger.error(error);
+        next(error);
     }
 });
 /**
@@ -117,7 +90,7 @@ router.post(
             min: 6,
         }),
     ],
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: AuthenticatedRequest, res: Response,next:NextFunction) => {
         try {
             const errors = validationResult(req);
 
@@ -129,29 +102,7 @@ router.post(
 
             const { email, password } = req.body;
 
-            const user = await User.findOne({
-                email,
-            });
-
-            if (!user) {
-                return res.status(400).json({
-                    message: 'Requested User does not exist',
-                });
-            }
-
-            const isMatch = await bcrypt.compare(password, user.password);
-
-            if (!isMatch) {
-                return res.status(400).json({
-                    message: 'Incorrect Password !',
-                });
-            }
-
-            const payload = {
-                user: {
-                    id: user.id,
-                },
-            };
+            const payload = await loginUser(email, password);
 
             jwt.sign(
                 payload,
@@ -167,13 +118,11 @@ router.post(
                 }
             );
         } catch (error) {
-            console.error(error.message);
-            res.status(500).json({
-                message: 'Server Error',
-            });
+            logger.error(error);
+            next(error);
         }
     }
 );
 
 
-export { router as SignupRouter };
+export { router as UserRouter };

@@ -1,8 +1,7 @@
-import { Router, Request, Response } from "express";
+import { Router, Response } from "express";
 import { check, validationResult } from "express-validator";
-import { Post, PostDocument } from "../../models/PostModal";
 import authMiddleware, { AuthenticatedRequest } from "../../middlewares/auth";
-import { PaginateOptions } from "mongoose";
+import { deletePost, getAllPosts, getPost, savePost, updatePost } from "./PostService";
 
 const router = Router();
 
@@ -19,6 +18,7 @@ router.post(
     ],
     authMiddleware,
     async (req: AuthenticatedRequest, res: Response) => {
+        console.log("hello")
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
@@ -28,17 +28,10 @@ router.post(
         }
 
         const { title, body } = req.body;
-        const userId = req.user?._id;
+        const userId = req.user.id;
 
         try {
-            const post = new Post({
-                title,
-                body,
-                user: userId
-            });
-
-            await post.save();
-
+            const post = await savePost(title, body,userId)
             res.status(201).json(post);
         } catch (err) {
             console.log(err.message);
@@ -52,18 +45,12 @@ router.post(
  * @description - Get all posts with pagination
  */
 router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-    const pageSize = req.query.pageSize || 10;
-    const currentPage = Number(req.query.pageNumber) || 1; 
+    const pageSize = Number(req.query.pageSize) || 10;
+    const currentPage = Number(req.query.pageNumber) || 1;
 
     try {
-        const options = {
-            page: currentPage,
-            limit: pageSize,
-            sort: { createdAt: -1 },
-        };
-        const { docs, totalDocs, totalPages } = await Post.paginate({ user: req.user.id }, options as PaginateOptions);
-
-        res.status(200).json({ posts: docs, page: currentPage, pages: totalPages, totalPosts: totalDocs });
+        const posts = await getAllPosts(pageSize, currentPage, req.user?.id);
+        res.status(200).json(posts);
     } catch (e) {
         console.error(e);
         res.status(500).json({
@@ -79,12 +66,7 @@ router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Respo
  */
 router.get("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const post = await Post.findOne({ _id: req.params.id, user: req.user.id });
-        if (!post) {
-            return res.status(404).json({
-                message: "Not able to find post"
-            });
-        }
+        const post = await getPost(req.params.id, req.user.id)
         res.status(200).json(post);
     } catch (e) {
         console.error(e);
@@ -103,21 +85,7 @@ router.put("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
     const { title, body } = req.body;
 
     try {
-        let post = await Post.findOne({ _id: req.params.id, user: req.user.id });
-        if (!post) {
-            return res.status(404).json({
-                message: "Not able to find post"
-            });
-        }
-
-        if (title) {
-            post.title = title;
-        }
-        if (body) {
-            post.body = body;
-        }
-
-        await post.save();
+        const post = await updatePost(req.params.id, req.user.id, title, body);
 
         res.status(200).json(post);
     } catch (e) {
@@ -135,17 +103,10 @@ router.put("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
  */
 router.delete("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const post = await Post.findOne({ _id: req.params.id, user: req.user.id });
-        if (!post) {
-            return res.status(404).json({
-                message: "Not able to find post"
-            });
-        }
-
-        await post.remove();
+        const message = await deletePost(req.params.id, req.user.id)
 
         res.status(200).json({
-            message: "Post deleted successfully"
+            message: message
         });
     } catch (e) {
         console.error(e);
@@ -156,3 +117,4 @@ router.delete("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res
 });
 
 export { router as PostRouter };
+

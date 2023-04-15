@@ -1,8 +1,7 @@
 import { Router, Response } from 'express';
 import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
-import { Comment, CommentDocument } from '../../models/CommentModal';
 import { body, param, validationResult } from 'express-validator';
-import { PaginateOptions } from 'mongoose';
+import { deleteComment, getAllComments, getCommentById, saveComment, updateComment } from './CommentService';
 
 const router = Router();
 
@@ -26,15 +25,7 @@ router.post('/comment/:postId', authMiddleware, [
     }
 
     try {
-        const comment: CommentDocument = new Comment({
-            email,
-            name,
-            body,
-            post: postId,
-            user: req.user.id,
-        });
-
-        await comment.save();
+        const comment = saveComment(email, name, body, postId, req.user._id)
 
         res.status(201).json({ message: 'Comment created successfully', comment });
     } catch (error) {
@@ -52,7 +43,7 @@ router.get('/comment/:postId', authMiddleware, [
     param('postId').notEmpty().isMongoId()
 ], async (req: AuthenticatedRequest, res: Response) => {
     const { postId } = req.params;
-    const pageSize = req.query.pageSize || 10;
+    const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
 
     const errors = validationResult(req);
@@ -61,13 +52,8 @@ router.get('/comment/:postId', authMiddleware, [
     }
 
     try {
-        const options = {
-            page: currentPage,
-            limit: pageSize,
-            sort: { createdAt: -1 },
-        }
-        const comments = await Comment.paginate(
-            { post: postId }, options as PaginateOptions);
+
+        const comments = await getAllComments(currentPage, pageSize, postId);
 
         res.status(200).json(comments);
     } catch (error) {
@@ -75,6 +61,35 @@ router.get('/comment/:postId', authMiddleware, [
         res.status(500).json({ message: 'Server error' });
     }
 });
+/**
+ * @method - GET
+ * @param - /comment/:commentId
+ * @description - Get a comment by ID
+ */
+router.get('/comment/:commentId', authMiddleware, [
+    param('commentId').notEmpty().isMongoId()
+], async (req: AuthenticatedRequest, res: Response) => {
+    const { commentId } = req.params;
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+        const comment = await getCommentById(commentId);
+
+        if (!comment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        res.status(200).json(comment);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 /**
  * @method - PUT
@@ -95,11 +110,8 @@ router.put('/comment/:id', authMiddleware, [
     }
 
     try {
-        const comment = await Comment.findOneAndUpdate({ _id: id, user: req.user.id }, req.body, { new: true });
-
-        if (!comment) {
-            return res.status(404).json({ message: 'Comment not found or you are not authorized' });
-        }
+        const { email, name, body } = req.body;
+        const comment = await updateComment(id, req.user._id, email, name, body);
 
         res.status(200).json({ message: 'Comment updated successfully', comment });
     } catch (error) {
@@ -116,13 +128,8 @@ router.delete('/comment/:id', authMiddleware, async (req: AuthenticatedRequest, 
     const { id } = req.params;
 
     try {
-        const comment = await Comment.findOneAndDelete({ _id: id, user: req.user.id });
-
-        if (!comment) {
-            return res.status(404).json({ message: 'Comment not found or you are not authorized' });
-        }
-
-        res.status(200).json({ message: 'Comment deleted successfully', comment });
+        const message = await deleteComment(req.params.id, req.user._id)
+        res.status(200).json({ message: message });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
