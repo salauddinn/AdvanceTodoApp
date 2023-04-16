@@ -4,7 +4,7 @@ class InvalidToken extends CustomError {
   statusCode = 400;
 
   constructor(resource: string) {
-    super(`${resource} not found`);
+    super(`${resource}`);
     Object.setPrototypeOf(this, InvalidToken.prototype);
   }
 

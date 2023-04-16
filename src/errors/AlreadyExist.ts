@@ -4,7 +4,7 @@ class AlreadyExist extends CustomError {
   statusCode = 403;
 
   constructor(resource: string) {
-    super(`${resource} not found`);
+    super(`${resource}`);
     Object.setPrototypeOf(this, AlreadyExist.prototype);
   }
 
