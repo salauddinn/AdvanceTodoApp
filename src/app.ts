@@ -8,6 +8,8 @@ import { UserRouter } from './api/user/UserRouter';
 import { limiter } from './config/rateLimitConfig';
 import { RouteNotFoundError } from './errors';
 import { errorHandler } from './middlewares';
+import swaggerMiddleware from "./swagger";
+
 
 const app = express();
 app.use(cookieParser());
@@ -19,6 +21,7 @@ app.use(UserRouter)
 app.use(TodoRouter)
 app.use(PostRouter)
 app.use(CommentRouter)
+swaggerMiddleware(app)
 app.all('*', () => {
     throw new RouteNotFoundError();
 });

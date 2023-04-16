@@ -1,22 +1,48 @@
-import { NextFunction, Response, Router } from 'express';
-import { check, param, validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
-import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
-import { getUser, loginUser, saveUser } from './UserService';
-import logger from '../../logger';
-import { redisClient } from '../../config/redisConfig';
+import { Router } from 'express';
+import { check, param } from 'express-validator';
+import authMiddleware from '../../middlewares/auth';
 import { cacheMiddleware } from '../../middlewares/cache';
 import { createNewUserHandler, getUserHandler, loginUserHandler, logoutUserHandler } from './UserHandler';
 
 const router = Router();
 
-
 /**
- * @method - POST
- * @param - /user
- * @description - Create new user
+ *@openapi
+ * tags:
+ *   name: User
+ *   description: User management APIs
  */
 
+/**
+ * @openapi
+ * /user:
+ *   post:
+ *     summary: Create new user
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             required:
+ *               - email
+ *               - password
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User created successfully
+ *       400:
+ *         description: Invalid request body
+ *       500:
+ *         description: Internal server error
+ */
 router.post(
     '/user',
     [
@@ -35,10 +61,32 @@ router.post(
 router.get('/user/:id', authMiddleware, cacheMiddleware, [
     param('id').notEmpty().isMongoId()
 ], getUserHandler);
+
 /**
- * @method - POST
- * @param - /login/
- * @description - Login the user
+ * @openapi
+ * /user/{id}:
+ *   get:
+ *     summary: Get user details
+ *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: User ID
+ *         schema:
+ *           type: string
+ *           format: ObjectId
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *       400:
+ *         description: Invalid user ID
+ *       401:
+ *         description: Unauthorized access
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
 
 router.post(
@@ -53,9 +101,36 @@ router.post(
 );
 
 /**
- * @method - POST
- * @param - /logout
- * @description - Logout the user
+ * @openapi
+ * /login:
+ *   post:
+ *     summary: Login the user
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             required:
+ *               - email
+ *               - password
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User logged in successfully
+ *       400:
+ *         description: Invalid request body
+ *       401:
+ *         description: Invalid email or password
+ *       500:
+ *         description: Internal server error
  */
 router.post('/logout', authMiddleware, logoutUserHandler);
 

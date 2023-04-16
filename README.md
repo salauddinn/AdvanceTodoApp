@@ -6,6 +6,8 @@ Prerequisite:
 1. Node version 18.x to be installed on the system
 2. Docker
 
+please check /api-docs for the swagger documentation
+
 ### To run in local
 
 1. Install dependencies
