@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
 import { getUser, loginUser, saveUser } from './UserService';
 import logger from '../../logger';
+import { redisClient } from '../../config/redisConfig';
+import { cacheMiddleware } from '../../middlewares/cache';
 
 const router = Router();
 
@@ -36,7 +38,7 @@ router.post(
             const [accessToken, refreshToken] = getAccessTokenAndRefreshToken(payload);
 
             res.status(200).json({
-                accessToken, refreshToken
+                accessToken, refreshToken, payload
             });
         } catch (err) {
             logger.error(err);
@@ -49,7 +51,7 @@ router.post(
  * @param - /user/:id
  * @description - Get user details
  */
-router.get('/user/:id', authMiddleware, [
+router.get('/user/:id', authMiddleware, cacheMiddleware, [
     param('id').notEmpty().isMongoId()
 ], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;
@@ -61,6 +63,7 @@ router.get('/user/:id', authMiddleware, [
 
     try {
         const user = await getUser(id)
+        redisClient.setEx(req.originalUrl, 300, JSON.stringify(user));
 
         res.status(200).json(user);
     } catch (error) {
@@ -122,10 +125,27 @@ const getAccessTokenAndRefreshToken = (payload: { user: { id: any; }; }) => {
             expiresIn: '7d',
         }
     );
-
+    redisClient.setEx(`refreshToken${payload.user.id}`, 7 * 24 * 60 * 60, refreshToken);
 
     return [accessToken, refreshToken];
 }
+/**
+ * @method - POST
+ * @param - /logout
+ * @description - Logout the user
+ */
+router.post('/logout', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user.id;
+        redisClient.del(`refreshToken${userId}`)
+
+        res.status(200).json({ message: 'User logged out successfully' });
+    } catch (error) {
+        logger.error(error);
+        next(error);
+    }
+});
+
 
 export { router as UserRouter };
 

@@ -66,7 +66,7 @@ router.get("/todo", authMiddleware,cacheMiddleware, async (req: AuthenticatedReq
  */
 router.get("/todo/:id", authMiddleware,cacheMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        const todo = await getTodo(req.params.id, req.user._id)
+        const todo = await getTodo(req.params.id, req.user.id)
         redisClient.setEx(req.originalUrl, 300, JSON.stringify(todo));
         res.status(200).json(todo);
     } catch (e) {
@@ -84,7 +84,7 @@ router.put("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
     const { content, completed } = req.body;
 
     try {
-        const todo = updateTodo(req.params.id, req.user._id, content, completed)
+        const todo = updateTodo(req.params.id, req.user.id, content, completed)
         res.status(200).json(todo);
     } catch (e) {
         logger.error(e.message);
@@ -99,7 +99,7 @@ router.put("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: R
  */
 router.delete("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        const meesage = await deleteTodo(req.params.id, req.user._id)
+        const meesage = await deleteTodo(req.params.id, req.user.id)
         res.status(200).json({
             message: meesage
         });
