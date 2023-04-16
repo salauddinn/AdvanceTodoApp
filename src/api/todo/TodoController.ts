@@ -3,6 +3,8 @@ import { check, validationResult } from "express-validator";
 import authMiddleware, { AuthenticatedRequest } from "../../middlewares/auth";
 import { deleteTodo, getAlltodos, getTodo, saveTodo, updateTodo } from "./TodoService";
 import logger from "../../logger";
+import { cacheMiddleware } from "../../middlewares/cache";
+import { redisClient } from "../../config/redisConfig";
 
 const router = Router();
 
@@ -60,9 +62,11 @@ router.get("/todo", authMiddleware, async (req: AuthenticatedRequest, res: Respo
  * @param - /todo/:id
  * @description - Get a specific todo
  */
-router.get("/todo/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get("/todo/:id", authMiddleware,cacheMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const todo = await getTodo(req.params.id, req.user._id)
+        console.log(todo,"---");
+        redisClient.setEx(req.params.id, 60, JSON.stringify(todo));
         res.status(200).json(todo);
     } catch (e) {
         logger.error(e.message);

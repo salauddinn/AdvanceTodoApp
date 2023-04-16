@@ -33,19 +33,11 @@ router.post(
         const { email, password } = req.body;
         try {
             const payload = await saveUser(email, password)
-            jwt.sign(
-                payload,
-                'randomString',
-                {
-                    expiresIn: 10000,
-                },
-                (err, token) => {
-                    if (err) throw err;
-                    res.status(200).json({
-                        token
-                    });
-                }
-            );
+            const [accessToken, refreshToken] = getAccessTokenAndRefreshToken(payload);
+
+            res.status(200).json({
+                accessToken, refreshToken
+            });
         } catch (err) {
             logger.error(err);
             next(err);
@@ -59,7 +51,7 @@ router.post(
  */
 router.get('/user/:id', authMiddleware, [
     param('id').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response,next:NextFunction) => {
+], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     const errors = validationResult(req);
@@ -90,7 +82,7 @@ router.post(
             min: 6,
         }),
     ],
-    async (req: AuthenticatedRequest, res: Response,next:NextFunction) => {
+    async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         try {
             const errors = validationResult(req);
 
@@ -104,25 +96,37 @@ router.post(
 
             const payload = await loginUser(email, password);
 
-            jwt.sign(
-                payload,
-                'randomString',
-                {
-                    expiresIn: '1h',
-                },
-                (err, token) => {
-                    if (err) throw err;
-                    res.status(200).json({
-                        token,
-                    });
-                }
-            );
+            const [accessToken, refreshToken] = getAccessTokenAndRefreshToken(payload);
+
+            res.status(200).json({
+                accessToken, refreshToken
+            });
         } catch (error) {
             logger.error(error);
             next(error);
         }
     }
 );
+const getAccessTokenAndRefreshToken = (payload: { user: { id: any; }; }) => {
+    const accessToken = jwt.sign(
+        payload,
+        'TodoApp',
+        {
+            expiresIn: '1h',
+        }
+    );
+    const refreshToken = jwt.sign(
+        { userId: payload.user.id },
+        'TodoAppRefreshToken',
+        {
+            expiresIn: '7d',
+        }
+    );
 
+
+    return [accessToken, refreshToken];
+}
 
 export { router as UserRouter };
+
+
