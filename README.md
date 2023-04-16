@@ -36,9 +36,9 @@ Use below command to run only unit tests
 ```bash
 npm run test
 ```
-## Spin up local mongo db
+## Spin up local mongo db and redis
 
-1. Run mongodb
+1. Run mongodb and redis
 
 ```bash
 docker-compose up -d

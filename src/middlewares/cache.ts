@@ -3,11 +3,12 @@ import { redisClient } from "../config/redisConfig";
 import logger from "../logger";
 
 export const cacheMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+    const key = req.originalUrl || req.url;
     try {
-        const data = await redisClient.get(id);
+        const data = await redisClient.get(key);
         if (data != null) {
-            logger.info("Found it in Redis  sjdj🟢");
+            logger.info("Found it in Redis 🟢"+ key);
+            res.json(JSON.parse(data));
         } else {
             logger.info("User Not Found 🔴 ");
             next();

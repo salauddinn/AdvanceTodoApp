@@ -3,6 +3,8 @@ import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
 import { body, query, param, validationResult } from 'express-validator';
 import { deleteComment, getAllComments, getCommentById, saveComment, updateComment } from './CommentService';
 import logger from '../../logger';
+import { redisClient } from '../../config/redisConfig';
+import { cacheMiddleware } from '../../middlewares/cache';
 
 const router = Router();
 
@@ -40,7 +42,7 @@ router.post('/comment/:postId', authMiddleware, [
  * @param - /comment?postId={}&pageSize={}&pageNumber={}
  * @description - Get all comments for a post
  */
-router.get('/comment', authMiddleware, [
+router.get('/comment', authMiddleware,cacheMiddleware, [
     query('postId').notEmpty().isMongoId()
 ], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const postId  = req.query?.postId?.toString();
@@ -55,7 +57,7 @@ router.get('/comment', authMiddleware, [
     try {
 
         const comments = await getAllComments(currentPage, pageSize, postId);
-
+        redisClient.setEx(req.originalUrl, 300, JSON.stringify(comments));
         res.status(200).json(comments);
     } catch (error) {
         logger.error(error);
@@ -67,7 +69,7 @@ router.get('/comment', authMiddleware, [
  * @param - /comment/:commentId
  * @description - Get a comment by ID
  */
-router.get('/comment/:commentId', authMiddleware, [
+router.get('/comment/:commentId', authMiddleware,cacheMiddleware, [
     param('commentId').notEmpty().isMongoId()
 ], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { commentId } = req.params;
@@ -79,6 +81,7 @@ router.get('/comment/:commentId', authMiddleware, [
 
     try {
         const comment = await getCommentById(commentId);
+        redisClient.setEx(req.originalUrl, 300, JSON.stringify(comment));
 
         if (!comment) {
             return res.status(404).json({ message: 'Comment not found' });

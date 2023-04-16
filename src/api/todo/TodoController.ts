@@ -43,13 +43,15 @@ router.post(
  * @param - /todo?pageSize={}&pageNumber={}
  * @description - Get all todos with pagination
  */
-router.get("/todo", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get("/todo", authMiddleware,cacheMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
 
     try {
         const userId = req.user?.id;
         const todos = await getAlltodos(currentPage, pageSize, userId)
+        redisClient.setEx(req.originalUrl, 300, JSON.stringify(todos));
+        
         res.status(200).json(todos);
     } catch (e) {
         logger.error(e.message);
@@ -65,8 +67,7 @@ router.get("/todo", authMiddleware, async (req: AuthenticatedRequest, res: Respo
 router.get("/todo/:id", authMiddleware,cacheMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const todo = await getTodo(req.params.id, req.user._id)
-        console.log(todo,"---");
-        redisClient.setEx(req.params.id, 60, JSON.stringify(todo));
+        redisClient.setEx(req.originalUrl, 300, JSON.stringify(todo));
         res.status(200).json(todo);
     } catch (e) {
         logger.error(e.message);

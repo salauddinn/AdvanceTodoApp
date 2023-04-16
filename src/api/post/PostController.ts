@@ -3,6 +3,8 @@ import { check, validationResult } from "express-validator";
 import authMiddleware, { AuthenticatedRequest } from "../../middlewares/auth";
 import { deletePost, getAllPosts, getPost, savePost, updatePost } from "./PostService";
 import logger from "../../logger";
+import { redisClient } from "../../config/redisConfig";
+import { cacheMiddleware } from "../../middlewares/cache";
 
 const router = Router();
 
@@ -44,12 +46,13 @@ router.post(
  * @param - /post?pageSize={}&pageNumber={}
  * @description - Get all posts with pagination
  */
-router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get("/post", authMiddleware,cacheMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
 
     try {
         const posts = await getAllPosts(currentPage, pageSize);
+        redisClient.setEx(req.originalUrl, 300, JSON.stringify(posts));
         res.status(200).json(posts);
     } catch (e) {
         logger.error(e);
@@ -62,9 +65,10 @@ router.get("/post", authMiddleware, async (req: AuthenticatedRequest, res: Respo
  * @param - /post/:id
  * @description - Get a specific post
  */
-router.get("/post/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get("/post/:id", authMiddleware, cacheMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const post = await getPost(req.params.id)
+        redisClient.setEx(req.originalUrl, 300, JSON.stringify(post));
         res.status(200).json(post);
     } catch (e) {
         logger.error(e);
