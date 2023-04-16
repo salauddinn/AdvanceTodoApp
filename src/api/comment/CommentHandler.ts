@@ -1,24 +1,12 @@
-import { Router, Response, NextFunction } from 'express';
-import authMiddleware, { AuthenticatedRequest } from '../../middlewares/auth';
-import { body, query, param, validationResult } from 'express-validator';
+import { Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../../middlewares/auth';
+import { validationResult } from 'express-validator';
 import { deleteComment, getAllComments, getCommentById, saveComment, updateComment } from './CommentService';
 import logger from '../../logger';
 import { redisClient } from '../../config/redisConfig';
-import { cacheMiddleware } from '../../middlewares/cache';
 
-const router = Router();
 
-/**
- * @method - POST
- * @param - /comment/:postId
- * @description - Create new comment on a post
- */
-router.post('/comment/:postId', authMiddleware, [
-    body('email').notEmpty().isEmail(),
-    body('name').notEmpty().isString(),
-    body('body').notEmpty().isString(),
-    param('postId').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const saveCommentHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { email, name, body } = req.body;
     const { postId } = req.params;
 
@@ -35,17 +23,10 @@ router.post('/comment/:postId', authMiddleware, [
         logger.error(error);
         next(error);
     }
-});
+}
 
-/**
- * @method - GET
- * @param - /comment?postId={}&pageSize={}&pageNumber={}
- * @description - Get all comments for a post
- */
-router.get('/comment', authMiddleware,cacheMiddleware, [
-    query('postId').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const postId  = req.query?.postId?.toString();
+export const getAllCommentsHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const postId = req.query?.postId?.toString();
     const pageSize = Number(req.query.pageSize) || 10;
     const currentPage = Number(req.query.pageNumber) || 1;
 
@@ -63,15 +44,8 @@ router.get('/comment', authMiddleware,cacheMiddleware, [
         logger.error(error);
         next(error);
     }
-});
-/**
- * @method - GET
- * @param - /comment/:commentId
- * @description - Get a comment by ID
- */
-router.get('/comment/:commentId', authMiddleware,cacheMiddleware, [
-    param('commentId').notEmpty().isMongoId()
-], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+}
+export const getCommentHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { commentId } = req.params;
 
     const errors = validationResult(req);
@@ -92,20 +66,10 @@ router.get('/comment/:commentId', authMiddleware,cacheMiddleware, [
         logger.error(error);
         next(error);
     }
-});
+}
 
 
-/**
- * @method - PUT
- * @param - /comment/:id
- * @description - Update a comment
- */
-router.put('/comment/:id', authMiddleware, [
-    param('id').notEmpty().isMongoId(),
-    body('email').optional().isEmail(),
-    body('name').optional().isString(),
-    body('body').optional().isString()
-], async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const updateCommentHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     const errors = validationResult(req);
@@ -122,13 +86,8 @@ router.put('/comment/:id', authMiddleware, [
         logger.error(error);
         next(error);
     }
-});
-/**
- * @method - DELETE
- * @param - /comment/:id
- * @description - Delete a comment
- */
-router.delete('/comment/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+}
+export const deleteCommentHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     try {
@@ -138,6 +97,4 @@ router.delete('/comment/:id', authMiddleware, async (req: AuthenticatedRequest, 
         logger.error(error);
         next(error);
     }
-});
-
-export { router as CommentRouter };
+}

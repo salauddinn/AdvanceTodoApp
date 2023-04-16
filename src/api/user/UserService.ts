@@ -1,9 +1,8 @@
+import bcrypt from 'bcrypt';
 import { AlreadyExist } from "../../errors/AlreadyExist";
 import { InvalidToken } from "../../errors/InvalidToken";
 import { NotFoundError } from "../../errors/NotFoundError";
-import { UserRouter } from "./UserController";
 import { User } from "./UserModal";
-import bcrypt from 'bcrypt';
 
 export const saveUser = async (email: string, password: string) => {
     let user = await User.findOne({

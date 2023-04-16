@@ -1,10 +1,10 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { json } from 'express';
-import { CommentRouter } from './api/comment/CommentController';
-import { PostRouter } from './api/post/PostController';
-import { TodoRouter } from './api/todo/TodoController';
-import { UserRouter } from './api/user/UserController';
+import { CommentRouter } from './api/comment/CommentRouter';
+import { PostRouter } from './api/post/PostRouter';
+import { TodoRouter } from './api/todo/TodoRouter';
+import { UserRouter } from './api/user/UserRouter';
 import { limiter } from './config/rateLimitConfig';
 import { RouteNotFoundError } from './errors';
 import { errorHandler } from './middlewares';
