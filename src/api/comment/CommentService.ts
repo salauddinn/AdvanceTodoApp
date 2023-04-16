@@ -1,5 +1,4 @@
 import { PaginateOptions } from "mongoose";
-import { UserDocument } from "../user/UserModal";
 import { Comment } from "./CommentModal";
 import { NotFoundError } from "../../errors/NotFoundError";
 
@@ -32,7 +31,7 @@ export const getCommentById = async (id: string) => {
 
     const comment = await Comment.findOne({ _id: id });
     if (!comment) {
-        throw new NotFoundError("comment not found");
+        throw new NotFoundError("Comment not found");
     }
     return comment;
 }
@@ -41,7 +40,7 @@ export const getCommentById = async (id: string) => {
 export const updateComment = async (id: string, userId: string, email: string,name:string, body: string) => {
     let comment = await Comment.findOne({ _id: id, user: userId });
     if (!comment) {
-        throw new NotFoundError("comment not found");
+        throw new NotFoundError("Comment not found");
     }
 
     if (email) {
@@ -61,7 +60,7 @@ export const updateComment = async (id: string, userId: string, email: string,na
 export const deleteComment = async (id: string, userId: string) => {
     const comment = await Comment.findOne({ _id: id, user: userId });
     if (!comment) {
-        throw new NotFoundError("comment not found");
+        throw new NotFoundError("Comment not found");
     }
 
     await comment.remove();

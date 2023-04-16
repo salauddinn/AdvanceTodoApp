@@ -1,90 +1,76 @@
 // import { expect } from 'chai';
-// import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
-// import { Response } from 'express';
-// import { AuthenticatedRequest } from '../../../middlewares/auth';
-// import * as CommentService from '../CommentService';
-// import { CommentRouter } from '../CommentController';
+// import { Agent,request } from 'supertest';
+// import { app } from '../../app';
+// import { Comment } from './CommentModel';
+// import { User } from '../user/UserModel';
+// import { connect, clearDatabase, closeDatabase } from '../../config/database';
+// import { createAccessToken } from '../../middlewares/auth';
+// import { redisClient } from '../../config/redisConfig';
+// import { promisify } from 'util';
+// import { cacheMiddleware } from '../../middlewares/cache';
 
-// describe('CommentController', () => {
-//     let sandbox: SinonSandbox;
-//     let saveCommentStub: SinonStub;
-//     let res: Response;
+// const agent = new Agent(app);
 
-//     before(() => {
-//         sandbox = createSandbox();
-//         saveCommentStub = sandbox.stub(CommentService, 'saveComment');
+// describe('CommentRouter', () => {
+//     before(async () => {
+//         await connect();
 //     });
 
-//     after(() => {
-//         sandbox.restore();
+//     beforeEach(async () => {
+//         await clearDatabase();
 //     });
 
-//     beforeEach(() => {
-//         res = {
-//             status: sandbox.stub().returnsThis(),
-//             json: sandbox.stub().returnsThis(),
-//         } as unknown as Response;
+//     after(async () => {
+//         await closeDatabase();
 //     });
 
 //     describe('POST /comment/:postId', () => {
-//         it('should return 201 status code and create a comment', async () => {
-//             const req = {
-//                 body: {
-//                     email: 'test@test.com',
-//                     name: 'Test User',
-//                     body: 'This is a test comment',
-//                 },
-//                 params: {
-//                     postId: '616c21f9a2779f2c6a8b7f61',
-//                 },
-//                 user: {
-//                     id: '616c21f9a2779f2c6a8b7f62',
-//                 },
-//             } as unknown as AuthenticatedRequest;
+//         it('should create a new comment on a post', async () => {
+//             const res = await request(app)
+//               .post('/comment/123')
+//               .send({
+//                 email: 'test@example.com',
+//                 name: 'Test User',
+//                 body: 'This is a test comment',
+//               })
+//               .set('Authorization', `Bearer ${process.env.TEST_JWT}`);
+      
+//             expect(res.status).to.equal(201);
+//             expect(res.body).to.have.property('message', 'Comment created successfully');
+//             expect(res.body.comment).to.have.property('postId', '123');
+//             expect(res.body.comment).to.have.property('email', 'test@example.com');
+//             expect(res.body.comment).to.have.property('name', 'Test User');
+//             expect(res.body.comment).to.have.property('body', 'This is a test comment');
+//           });
+//     });
 
-//             saveCommentStub.resolves({ _id: '616c21f9a2779f2c6a8b7f63', ...req.body });
+//     describe('GET /comment', () => {
+//         it('should get all comments for a post', async () => {
+//             const user = await User.create({ email: 'test@example.com', password: 'password' });
 
-//             await CommentRouter.handle(req, res);
+//             const post = {
+//                 title: 'Test Post',
+//                 body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit',
+//                 author: user.id,
+//             };
 
-//             expect(res.status).to.have.been.calledWith(201);
-//             expect(res.json).to.have.been.calledWith({
-//                 message: 'Comment created successfully',
-//                 comment: { _id: '616c21f9a2779f2c6a8b7f63', ...req.body },
-//             });
-//             expect(saveCommentStub).to.have.been.calledWith(req.body.email, req.body.name, req.body.body, req.params.postId, req.user?.id);
-//         });
+//             const savedPost = await request(app).post('/post').send(post).set('Authorization', `Bearer ${createAccessToken(user)}`);
 
-//         it('should return 400 status code if there are validation errors', async () => {
-//             const req = {
-//                 body: {},
-//                 params: {},
-//             } as unknown as AuthenticatedRequest;
+//             const comment = {
+//                 email: 'test@example.com',
+//                 name: 'Test User',
+//                 body: 'Great post!',
+//                 postId: savedPost.body.post._id,
+//                 userId: user.id,
+//             };
 
-//             await CommentRouter.handle(req, res);
+//             await Comment.create(comment);
 
-//             expect(res.status).to.have.been.calledWith(400);
-//             expect(res.json).to.have.been.calledWith(sinon.match({ errors: sinon.match.array }));
-//             expect(saveCommentStub).to.not.have.been.called;
+//             const response = await agent.get(`/comment?postId=${savedPost.body.post._id}`).set('Authorization', `Bearer ${createAccessToken(user)}`);
+
+//             expect(response.status).to.equal(200);
+//             expect(response.body).to.be.an('array').that.has.lengthOf(1);
+//             expect(response.body[0]).to.include(comment);
 //         });
 //     });
-//     // it('should return 500 status code if an error occurs', async () => {
-//     //   const req = {
-//     //     body: {
-//     //       email: 'test@test.com',
-//     //       name: 'Test User',
-//     //       body: 'This is a test comment',
-//     //     },
-//     //     params: {
-//     //       postId: '616c21f9a2779f2c6a8b7f61',
-//     //     },
-//     //     user: {
-//     //       id: '616c21f9a2779f2c6a8b7f62',
-//     //     },
-//     //   } as unknown as AuthenticatedRequest;
-
-//     //   saveCommentStub.rejects(new Error('Test error'));
-
-//     //   await CommentRouter.handle(req, res);
-
-//     //   expect(res.status).to.have.been.calledWith(500);
-//     //   expect(res.json).to.have.been.calledWith(sinon.match({ message: 'Internal server error'
+// });

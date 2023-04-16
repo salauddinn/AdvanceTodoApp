@@ -17,7 +17,7 @@ export const saveUser = async (email: string, password: string) => {
         email,
         password,
     });
-
+    
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
 
@@ -31,6 +31,7 @@ export const saveUser = async (email: string, password: string) => {
 }
 
 export const getUser = async (id: string) => {
+
     const user = await User.findById(id).select('-password');
 
     if (!user) {

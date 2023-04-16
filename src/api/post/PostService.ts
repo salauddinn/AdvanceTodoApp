@@ -6,7 +6,7 @@ export const savePost = async (title: string, body: string, userId: string) => {
     const post = new Post({
         title,
         body,
-        user: new mongoose.Types.ObjectId(userId)
+        user: userId
     });
 
     await post.save();
@@ -28,7 +28,7 @@ export const getAllPosts = async (currentPage: number, pageSize: number) => {
 
 export const getPost = async (id: string) => {
 
-    const post = await Post.findOne({ _id: id});
+    const post = await Post.findOne({ _id: id });
     if (!post) {
         throw new NotFoundError("post not found");
     }
