@@ -56,6 +56,7 @@ export const updateTodoHandler = async (req: AuthenticatedRequest, res: Response
 
     try {
         const todo = updateTodo(req.params.id, req.user.id, content, completed)
+        logger.info(`Updat todo`,todo);
         res.status(200).json(todo);
     } catch (e) {
         logger.error(e.message);

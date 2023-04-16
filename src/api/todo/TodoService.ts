@@ -25,7 +25,7 @@ export const getAlltodos = async (currentPage: number, pageSize: number, userid:
 export const getTodo = async (id: string, userId: string) => {
     const todo = await Todo.findOne({ _id: id, user: { $ne: userId } });
     if (!todo) {
-        throw new NotFoundError("todo not found");
+        throw new NotFoundError("todo not found or ur not have permissions access your own todos");
     }
     return todo;
 }
