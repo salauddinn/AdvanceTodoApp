@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/src/index.js",
   "scripts": {
-    "build":"tsc"
+    "build":"npm run test & tsc",
     "start": "tsc && node dist/src/index.js",
     "test": "mocha --config .mocharc.unit.json",
     "lint": "eslint . --ext .ts"
