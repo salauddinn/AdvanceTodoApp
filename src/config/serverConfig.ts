@@ -11,6 +11,7 @@ const envVars = {
     MONGO_DB_NAME:process.env.MONGO_DB_NAME,
     LOG_LEVEL:process.env.LOG_LEVEL,
     REDIS_URL:process.env.REDIS_URL,
+    MONGO_URL:process.env.MONGO_URL
 
 }
 export default envVars;

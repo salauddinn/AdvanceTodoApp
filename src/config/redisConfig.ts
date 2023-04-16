@@ -10,5 +10,5 @@ redisClient.on('error', (e) => {
     logger.error("error occurred estalibishing redis client",e)
 })
 redisClient.on('connect', () => {
-    logger.error("Redis connection established")
+    logger.info("Redis connection established")
 })

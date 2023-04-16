@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 import logger from '../logger';
 import config from './serverConfig'
+const { MONGO_HOST, MONGO_PORT, MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB_NAME ,MONGO_URL} = config
 
 const connectMongoDB = async () => {
-  const connectionString = getConnectionString();
+  const connectionString =  MONGO_URL|| getConnectionString();
 
   mongoose.set('strictQuery', false);
   await mongoose.connect(connectionString);
@@ -15,7 +16,6 @@ const connectMongoDB = async () => {
     logger.info('✅ mongoose is connected');
   });
 };
-const { MONGO_HOST, MONGO_PORT, MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB_NAME } = config
 
 const getConnectionString = () => {
   if (!MONGO_HOST) {
