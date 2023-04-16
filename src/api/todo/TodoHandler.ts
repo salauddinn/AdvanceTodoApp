@@ -33,7 +33,7 @@ export const getAllTodoHandler = async (req: AuthenticatedRequest, res: Response
     try {
         const userId = req.user?.id;
         const todos = await getAlltodos(currentPage, pageSize, userId)
-        redisClient.setEx(req.originalUrl, 300, JSON.stringify(todos));
+        redisClient.setEx(req.originalUrl, 60, JSON.stringify(todos));
 
         res.status(200).json(todos);
     } catch (e) {
@@ -44,7 +44,7 @@ export const getAllTodoHandler = async (req: AuthenticatedRequest, res: Response
 export const getTodoHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const todo = await getTodo(req.params.id, req.user.id)
-        redisClient.setEx(req.originalUrl, 300, JSON.stringify(todo));
+        redisClient.setEx(req.originalUrl, 60, JSON.stringify(todo));
         res.status(200).json(todo);
     } catch (e) {
         logger.error(e.message);

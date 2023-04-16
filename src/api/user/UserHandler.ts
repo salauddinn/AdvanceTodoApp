@@ -41,7 +41,7 @@ export const getUserHandler = async (req: AuthenticatedRequest, res: Response, n
 
     try {
         const user = await getUser(id)
-        redisClient.setEx(req.originalUrl, 300, JSON.stringify(user));
+        redisClient.setEx(req.originalUrl, 60, JSON.stringify(user));
 
         res.status(200).json(user);
     } catch (error) {

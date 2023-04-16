@@ -31,7 +31,7 @@ export const getAllPostHandler = async (req: AuthenticatedRequest, res: Response
 
     try {
         const posts = await getAllPosts(currentPage, pageSize);
-        redisClient.setEx(req.originalUrl, 300, JSON.stringify(posts));
+        redisClient.setEx(req.originalUrl, 60, JSON.stringify(posts));
         res.status(200).json(posts);
     } catch (e) {
         logger.error(e);
@@ -43,7 +43,7 @@ export const getAllPostHandler = async (req: AuthenticatedRequest, res: Response
 export const getPostHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const post = await getPost(req.params.id)
-        redisClient.setEx(req.originalUrl, 300, JSON.stringify(post));
+        redisClient.setEx(req.originalUrl, 60, JSON.stringify(post));
         res.status(200).json(post);
     } catch (e) {
         logger.error(e);

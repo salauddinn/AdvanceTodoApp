@@ -4,7 +4,7 @@ class NotFoundError extends CustomError {
   statusCode = 404;
 
   constructor(resource: string) {
-    super(`${resource} not found`);
+    super(`${resource}`);
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 

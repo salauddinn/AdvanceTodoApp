@@ -38,7 +38,7 @@ export const getAllCommentsHandler = async (req: AuthenticatedRequest, res: Resp
     try {
 
         const comments = await getAllComments(currentPage, pageSize, postId);
-        redisClient.setEx(req.originalUrl, 300, JSON.stringify(comments));
+        redisClient.setEx(req.originalUrl, 60, JSON.stringify(comments));
         res.status(200).json(comments);
     } catch (error) {
         logger.error(error);
@@ -55,7 +55,7 @@ export const getCommentHandler = async (req: AuthenticatedRequest, res: Response
 
     try {
         const comment = await getCommentById(commentId);
-        redisClient.setEx(req.originalUrl, 300, JSON.stringify(comment));
+        redisClient.setEx(req.originalUrl, 60, JSON.stringify(comment));
 
         if (!comment) {
             return res.status(404).json({ message: 'Comment not found' });
