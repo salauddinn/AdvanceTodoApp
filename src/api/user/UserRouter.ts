@@ -76,6 +76,8 @@ router.get('/user/:id', authMiddleware, cacheMiddleware, [
  *         schema:
  *           type: string
  *           format: ObjectId
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User details retrieved successfully

@@ -4,13 +4,7 @@ import swaggerJsdoc, { Options } from "swagger-jsdoc";
 
 const options: Options = {
     definition: {
-        securitySchemes: {
-            bearerAuth: {
-                type: "http",
-                scheme: "bearer",
-                bearerFormat: "JWT",
-            },
-        },
+
         openapi: "3.0.0",
         info: {
             title: "Node.js API with Swagger",
@@ -22,7 +16,20 @@ const options: Options = {
                 email: "salauddi.iiitn@gmail.com",
             },
         },
-      
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+
+            },
+        },
+
+        security: {
+            bearerAuth: []
+        },
         servers: [
             {
                 url: "http://localhost:3000",
@@ -35,14 +42,12 @@ const options: Options = {
         ],
     },
 
-    apis: ["src/api/comment/CommentRouter.ts","src/api/todo/TodoRouter.ts","src/api/post/PostRouter.ts","src/api/user/UserRouter.ts"], 
-    
-    
+    apis: ["src/api/comment/CommentRouter.ts", "src/api/todo/TodoRouter.ts", "src/api/post/PostRouter.ts", "src/api/user/UserRouter.ts"],
 };
 
 
 const specs = swaggerJsdoc(options);
 
 export default (app: express.Application) => {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 };
