@@ -36,7 +36,7 @@ const options: Options = {
                 description: "Development server",
             },
             {
-                url: "http://cutshort.salauddinn.in/",
+                url: "https://my-o58z.onrender.com",
                 description: "Prod server",
             },
         ],
