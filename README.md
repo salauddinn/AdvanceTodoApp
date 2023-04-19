@@ -24,6 +24,8 @@ MONGO_PASSWORD=<value>
 MONGO_HOST=<value>
 MONGO_PORT=<value>
 MONGO_DB_NAME=<value>
+REDIS_URL=<value>
+MONGO_URL=<value> #this can used instead other mongo envs if u have url
 PORT=<value> #FQDN of the git-api-server
 ```
 
