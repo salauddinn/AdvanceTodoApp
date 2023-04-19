@@ -26,7 +26,7 @@ MONGO_PORT=<value>
 MONGO_DB_NAME=<value>
 REDIS_URL=<value>
 MONGO_URL=<value> #this can used instead other mongo envs if u have url
-PORT=<value> #FQDN of the git-api-server
+PORT=<value>
 ```
 
 3. Run in development mode( this will restart the server whenever some src file changes )
